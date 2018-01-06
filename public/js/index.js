@@ -10,21 +10,24 @@ socket.on('disconnect', () => {
 
 socket.on('newMessage', (message) => {
   const formattedTime = moment(message.createdAt).format('HH:mm:ss');
-  console.log('newMessage', message);
-  const li = jQuery('<li></li>');
-  li.text(`${message.from} ${formattedTime}: ${message.text}`);
-  jQuery('#messages').append(li);
+  const template = jQuery('#message-template').html();
+  const html = Mustache.render(template, {
+    text: message.text,
+    from: message.from,
+    createdAt: formattedTime,
+  });
+  jQuery('#messages').append(html);
 });
 
 socket.on('newLocationMessage', (message) => {
-  const li = jQuery('<li></li>');
-  const a = jQuery('<a target="_blank">My current location</a>');
   const formattedTime = moment(message.createdAt).format('HH:mm:ss');
-
-  li.text(`${message.from} ${formattedTime}: `);
-  a.attr('href', message.url);
-  li.append(a);
-  jQuery('#messages').append(li);
+  const template = jQuery('#location-message-template').html();
+  const html = Mustache.render(template, {
+    url: message.url,
+    from: message.from,
+    createdAt: formattedTime,
+  });
+  jQuery('#messages').append(html);
 });
 
 
@@ -35,7 +38,7 @@ jQuery('#message-form').on('submit', (e) => {
 
   socket.emit('createMessage', {
     from: 'User',
-    text: messageTextbox.val()
+    text: messageTextbox.val(),
   }, () => {
     // acknowledgment
     messageTextbox.val('');
@@ -54,7 +57,7 @@ locationButton.on('click', () => {
     locationButton.removeAttr('disabled').text('Send location');
     socket.emit('createLocationMessage', {
       latitude: position.coords.latitude,
-      longitude: position.coords.longitude
+      longitude: position.coords.longitude,
     });
   }, () => {
     locationButton.removeAttr('disabled').text('Send location');
